@@ -19,7 +19,7 @@ function Login(){
     const handleLogin = async() => {
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/login",
+                "https://verification-ymz3.onrender.com/api/login",
                 { email, password }
             );
 
@@ -41,7 +41,7 @@ function Login(){
             return;
         }
         try {
-            await axios.post("http://localhost:5000/api/forgot-password",{
+            await axios.post("https://verification-ymz3.onrender.com/api/forgot-password",{
                 email,
             });
 

@@ -19,7 +19,7 @@ const VerifyOtp = () => {
 
     const handleForgotPassword = async () => {
         try {
-            await axios.post("http://localhost:5000/api/verify-otp", {
+            await axios.post("https://verification-ymz3.onrender.com/api/verify-otp", {
                 email,
                 otp,
             });

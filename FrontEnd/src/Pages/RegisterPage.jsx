@@ -16,7 +16,7 @@ function RegisterPage(){
     const handleRegister = async() =>{
         try {
             //Send POST request to backend for registration
-            await axios.post('http://localhost:5000/api/register',{ userName, email, password});
+            await axios.post('https://verification-ymz3.onrender.com/api/register',{ userName, email, password});
             alert('User registered successfully')
 
             //After successful registration,redirect to the login page
