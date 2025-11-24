@@ -16,20 +16,21 @@ function Login(){
     //LOGIN FUNCTION
     //----------------------------------------------
 
-    const handleLogin = async() => {
-        try {
-            const response = await axios.post(
-                "https://verification-ymz3.onrender.com/api/login",
-                { email, password }
-            );
+    const handleLogin = async () => {
+  try {
+    const response = await axios.post(
+      "https://verification-ymz3.onrender.com/api/login",
+      { email, password }
+    );
 
-            alert("Login successful");
-            navigate("/home")
-        } catch (error) {
-            console.error("Login failed", error);
-            alert("Failed to login");
-        }
-    };
+    alert("Login successful");
+    navigate("/home");
+  } catch (error) {
+    console.error("Login failed", error.response?.data || error.message);
+    alert(error.response?.data || "Failed to login");
+  }
+};
+
 
     //---------------------------------------------
     //FORGOT PASSWORD FUNCTION (SEND OTP)
