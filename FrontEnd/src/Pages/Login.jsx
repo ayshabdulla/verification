@@ -1,12 +1,12 @@
 //src/pages/Loginpage.js
 import React, { useState } from 'react'
 
-import './Login.css'; 
+import './Login.css';
 
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function Login(){
+function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
@@ -16,7 +16,7 @@ function Login(){
     //LOGIN FUNCTION
     //----------------------------------------------
 
-    const handleLogin = async() => {
+    const handleLogin = async () => {
         try {
             const response = await axios.post(
                 "https://verification-ymz3.onrender.com/api/login",
@@ -26,8 +26,9 @@ function Login(){
             alert("Login successful");
             navigate("/home")
         } catch (error) {
-            console.error("Login failed", error);
-            alert("Failed to login");
+            alert(error.response?.data || "Failed to login");
+            console.log(error.response?.data);
+
         }
     };
 
@@ -36,12 +37,12 @@ function Login(){
     //---------------------------------------------
 
     const handleForgotPassword = async () => {
-        if(!email){
+        if (!email) {
             alert("Please enter your email first");
             return;
         }
         try {
-            await axios.post("https://verification-ymz3.onrender.com/api/forgot-password",{
+            await axios.post("https://verification-ymz3.onrender.com/api/forgot-password", {
                 email,
             });
 
@@ -57,21 +58,21 @@ function Login(){
 
 
 
-  return (
-    <div  className="login-container">
+    return (
+        <div className="login-container">
 
-        <h2>Login</h2>
-             <input
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            <h2>Login</h2>
+            <input
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
             />
 
-             <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
             />
             <br />
             <button onClick={handleLogin}>Login</button>
@@ -79,15 +80,15 @@ function Login(){
 
             {/* FORGET PASSWORD BUTTON  */}
             <button
-            onClick={handleForgotPassword}
-            style={{background: "none", border: "none", color: "blue",cursor: "pointer" }}
+                onClick={handleForgotPassword}
+                style={{ background: "none", border: "none", color: "blue", cursor: "pointer" }}
             >
                 Forgot Password?
             </button>
 
-      
-    </div>
-  );
+
+        </div>
+    );
 }
 
 export default Login
