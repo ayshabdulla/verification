@@ -17,13 +17,18 @@ const transporter = nodemailer.createTransport({
 
 //Register User
 exports.register = async (req, res) => {
-
-    if (!userName || !email || !password) {
-    return res.status(400).send("All fields are required");
-}
-
     try {
         const { userName, email, password } = req.body;
+
+        // ✅ VALIDATION AFTER DESTRUCTURING
+        if (!userName || !email || !password) {
+            return res.status(400).send("All fields are required");
+        }
+
+        const existingUser = await userModel.findOne({ email });
+        if (existingUser) {
+            return res.status(400).send("Email already registered");
+        }
 
         const hashed = await bcrypt.hash(password, 10);
 
@@ -35,19 +40,21 @@ exports.register = async (req, res) => {
 
         res.status(200).send("User registered");
     } catch (err) {
+        console.error("REGISTER ERROR:", err);
         res.status(500).send("Registration failed");
     }
 };
 
 
+
 //FORGOT PASSWORD -SEND OTP
 exports.forgotPassword = async (req, res) => {
-
-    if (!email) {
-        return res.status(400).send("Email is required");
-    }
     try {
-        const { email } = req.body;                     
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).send("Email is required");
+        }
 
         const user = await userModel.findOne({ email });
         if (!user) return res.send("If user exists, OTP sent");
@@ -65,7 +72,6 @@ exports.forgotPassword = async (req, res) => {
             html: `<h2>Your OTP is ${otp}</h2><p>Valid for 5 minutes</p>`
         });
 
-
         res.send("OTP sent successfully");
     } catch (error) {
         console.error("OTP ERROR:", error);
@@ -74,26 +80,38 @@ exports.forgotPassword = async (req, res) => {
 };
 
 
+
 //VERIFY OTP
 exports.verifyOtp = async (req, res) => {
-    const { email, otp } = req.body;
+    try {
+        const { email, otp } = req.body;
 
-    const user = await userModel.findOne({ email });
-    if (!user) return res.status(404).send('Invalid email');
+        if (!email || !otp) {
+            return res.status(400).send("Email and OTP required");
+        }
 
-    if (user.otp !== otp) return res.status(400).send("Invalid OTP");
+        const user = await userModel.findOne({ email });
+        if (!user) return res.status(404).send("Invalid email");
 
-    if (user.otpExpire && user.otpExpire > Date.now()) {
-    return res.send("OTP already sent. Please wait.");
-}
+        if (user.otp !== otp) {
+            return res.status(400).send("Invalid OTP");
+        }
 
-      // ✅ clear OTP after verification
-    user.otp = null;
-    user.otpExpire = null;
-    await user.save();
+        if (user.otpExpire < Date.now()) {
+            return res.status(400).send("OTP expired");
+        }
 
-    res.send("OTP verified");
+        user.otp = null;
+        user.otpExpire = null;
+        await user.save();
+
+        res.send("OTP verified");
+    } catch (err) {
+        console.error("VERIFY OTP ERROR:", err);
+        res.status(500).send("OTP verification failed");
+    }
 };
+
 
 //RESET PASSWORD AFTER OTP VERIFIED
 exports.resetPassword = async (req, res) => {
@@ -115,39 +133,40 @@ exports.resetPassword = async (req, res) => {
 
 //LOGIN USER
 exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    if (!email || !password) {
-    return res.status(400).send("Email and password required");
-}
+        // ✅ VALIDATION AFTER DESTRUCTURING
+        if (!email || !password) {
+            return res.status(400).send("Email and password required");
+        }
 
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return res.status(400).send("User does not exist");
+        }
 
-    const { email, password } = req.body;
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).send("Invalid password");
+        }
 
-    const user = await userModel.findOne({ email });
-    if (!user) {
-        return res.status(400).send("User does not exist");
+        const token = jwt.sign(
+            { userId: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
+
+        res.cookie("auth-token", token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+            maxAge: 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).send("Login successful");
+    } catch (err) {
+        console.error("LOGIN ERROR:", err);
+        res.status(500).send("Login failed");
     }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-        return res.status(400).send("Invalid password");
-    }
-
-    // ✅ Create JWT
-    const token = jwt.sign(
-        { userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-    );
-
-    // ✅ Send JWT as cookie
-    res.cookie("auth-token", token, {
-        httpOnly: true,
-        secure: true,      // REQUIRED on Render (HTTPS)
-        sameSite: "none",  // REQUIRED for frontend-backend different domains
-        maxAge: 24 * 60 * 60 * 1000
-    });
-
-    res.status(200).send("Login successful");
-
 };
