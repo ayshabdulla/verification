@@ -35,27 +35,32 @@ exports.register = async (req, res) => {
 
 //FORGOT PASSWORD -SEND OTP
 exports.forgotPassword = async (req, res) => {
+  try {
     const { email } = req.body;
 
     const user = await userModel.findOne({ email });
     if (!user) return res.send("If user exists, OTP sent");
 
-    //Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+    user.otpExpire = Date.now() + 5 * 60 * 1000;
     await user.save();
 
     await transporter.sendMail({
-        to: user.email,
-        from: process.env.EMAIL_USER,
-        subject: "Your OTP Code",
-        text: `Your OTP is: ${otp}`
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset OTP",
+      html: `<h3>Your OTP is ${otp}</h3>`
     });
 
-    res.send("OTP sent");
+    res.send("OTP sent successfully");
+  } catch (error) {
+    console.error("OTP ERROR:", error);
+    res.status(500).send("Failed to send OTP");
+  }
 };
+
 
 //VERIFY OTP
 exports.verifyOtp = async ( req, res) => {
