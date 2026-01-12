@@ -92,7 +92,7 @@ exports.resetPassword = async (req, res)=> {
 
 //LOGIN USER
 exports.login = async (req, res) => {
-  try {
+  
     const { email, password } = req.body;
 
     const user = await userModel.findOne({ email });
@@ -121,7 +121,5 @@ exports.login = async (req, res) => {
     });
 
     res.status(200).send("Login successful");
-  } catch (error) {
-    res.status(500).send("Login failed");
-  }
+  
 };
