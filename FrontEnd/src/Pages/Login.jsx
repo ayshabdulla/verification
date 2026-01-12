@@ -23,6 +23,7 @@ function Login() {
                 { email, password }
             );
 
+            
             alert("Login successful");
             navigate("/home")
         } catch (error) {

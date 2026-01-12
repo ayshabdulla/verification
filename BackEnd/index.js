@@ -16,6 +16,10 @@ app.use(cors({
   credentials: true
 }));
 
+app.get("/", (req, res) => {
+  res.send("Verification API is running 🚀");
+});
+
 
 //Routes
 app.use('/api',router);
