@@ -20,6 +20,10 @@ app.get("/", (req, res) => {
   res.send("Verification API is running 🚀");
 });
 
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+
 
 //Routes
 app.use('/api',router);

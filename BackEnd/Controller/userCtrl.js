@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 const userModel = require("../Model/user");
 
@@ -14,13 +15,23 @@ const transporter = nodemailer.createTransport({
 
 //Register User
 exports.register = async (req, res) => {
+  try {
     const { userName, email, password } = req.body;
 
     const hashed = await bcrypt.hash(password, 10);
-    await userModel.create({userName, email, password: hashed });
 
-    res.send('User registered');
+    await userModel.create({
+      userName,
+      email,
+      password: hashed
+    });
+
+    res.status(200).send("User registered");
+  } catch (err) {
+    res.status(500).send("Registration failed");
+  }
 };
+
 
 //FORGOT PASSWORD -SEND OTP
 exports.forgotPassword = async (req, res) => {
@@ -80,15 +91,37 @@ exports.resetPassword = async (req, res)=> {
 };
 
 //LOGIN USER
-exports.login = async ( req, res) => {
-    const { email,password } = req.body;
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
     const user = await userModel.findOne({ email });
-    if(!user) return res.status(400).send("User does not exist");
+    if (!user) {
+      return res.status(400).send("User does not exist");
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).send("Invalid password");
+    if (!isMatch) {
+      return res.status(400).send("Invalid password");
+    }
 
-    res.send("Login successful");
+    // ✅ Create JWT
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
+    // ✅ Send JWT as cookie
+    res.cookie("auth-token", token, {
+      httpOnly: true,
+      secure: true,      // REQUIRED on Render (HTTPS)
+      sameSite: "none",  // REQUIRED for frontend-backend different domains
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.status(200).send("Login successful");
+  } catch (error) {
+    res.status(500).send("Login failed");
+  }
 };
