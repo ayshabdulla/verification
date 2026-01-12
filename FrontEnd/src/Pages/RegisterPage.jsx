@@ -11,30 +11,27 @@ function RegisterPage() {
     const navigate = useNavigate();
 
     const handleRegister = async () => {
-        // ✅ Frontend validation
-        if (!userName || !email || !password) {
-            alert("All fields are required");
-            return;
-        }
 
-        if (password.length < 6) {
-            alert("Password must be at least 6 characters");
-            return;
-        }
+  if (!userName || !email || !password) {
+    alert("All fields are required");
+    return;
+  }
 
-        try {
-            await axios.post(
-                "https://verification-ymz3.onrender.com/api/register",
-                { userName, email, password }
-            );
+  try {
+    await axios.post(
+      "https://verification-ymz3.onrender.com/api/register",
+      { userName, email, password }
+    );
 
-            alert("User registered successfully");
-            navigate("/login");
-        } catch (error) {
-            console.error("Error during registration:", error);
-            alert(error.response?.data || "Registration failed");
-        }
-    };
+    alert("User registered successfully");
+    navigate("/login");
+
+  } catch (error) {
+    console.error("Error during registration:", error.response?.data);
+    alert(error.response?.data || "Registration failed");
+  }
+};
+
 
     return (
         <div className="register-container">
