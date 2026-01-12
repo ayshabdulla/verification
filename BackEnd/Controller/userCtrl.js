@@ -17,6 +17,11 @@ const transporter = nodemailer.createTransport({
 
 //Register User
 exports.register = async (req, res) => {
+
+    if (!userName || !email || !password) {
+    return res.status(400).send("All fields are required");
+}
+
     try {
         const { userName, email, password } = req.body;
 
@@ -37,8 +42,12 @@ exports.register = async (req, res) => {
 
 //FORGOT PASSWORD -SEND OTP
 exports.forgotPassword = async (req, res) => {
+
+    if (!email) {
+        return res.status(400).send("Email is required");
+    }
     try {
-        const { email } = req.body;
+        const { email } = req.body;                     
 
         const user = await userModel.findOne({ email });
         if (!user) return res.send("If user exists, OTP sent");
@@ -74,8 +83,14 @@ exports.verifyOtp = async (req, res) => {
 
     if (user.otp !== otp) return res.status(400).send("Invalid OTP");
 
-    if (user.otpExpiry < Date.now())
-        return res.status(400).send("OTP expired");
+    if (user.otpExpire && user.otpExpire > Date.now()) {
+    return res.send("OTP already sent. Please wait.");
+}
+
+      // ✅ clear OTP after verification
+    user.otp = null;
+    user.otpExpire = null;
+    await user.save();
 
     res.send("OTP verified");
 };
@@ -91,7 +106,7 @@ exports.resetPassword = async (req, res) => {
 
     user.password = hashed;
     user.otp = null;
-    user.otpExpiry = null;
+    user.otpExpire = null;
 
     await user.save();
 
@@ -100,6 +115,11 @@ exports.resetPassword = async (req, res) => {
 
 //LOGIN USER
 exports.login = async (req, res) => {
+
+    if (!email || !password) {
+    return res.status(400).send("Email and password required");
+}
+
 
     const { email, password } = req.body;
 
